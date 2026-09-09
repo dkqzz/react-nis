@@ -29,6 +29,25 @@ export const defaultRules: Rules = {
     age: (value) => value > 0,
 };
 
+function passesRule<K extends keyof IFormData>(
+    data: IFormData,
+    rules: Rules,
+    field: K,
+): boolean {
+    return rules[field](data[field]);
+}
+
 export function validateForm(data: IFormData, rules: Rules): Errors {
-    throw new Error("не реализовано");
+    const errors: Errors = {};
+    const fields: Array<keyof IFormData> = ["username", "email", "age"];
+
+    for (const field of fields) {
+        if (passesRule(data, rules, field)) {
+            continue;
+        } else {
+            errors[field] = `Поле ${field} заполнено неверно`;
+        }
+    }
+
+    return errors;
 }

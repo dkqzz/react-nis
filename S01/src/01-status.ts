@@ -6,12 +6,25 @@
 //    становился ошибкой компиляции.
 // 4. Добавьте в Status вариант "cancelled" и почините то, что сломается.
 
-export type Status = "idle" | "loading" | "success" | "error";
+export type Status = "idle" | "loading" | "success" | "error" | "cancelled";
 
 export function assertNever(value: never): never {
     throw new Error("Необработанный вариант: " + JSON.stringify(value));
 }
 
 export function statusMessage(status: Status): string {
-    throw new Error("не реализовано");
+    switch (status) {
+        case "idle":
+            return "Ожидание";
+        case "loading":
+            return "Загрузка";
+        case "success":
+            return "Успешно";
+        case "error":
+            return "Ошибка";
+        case "cancelled":
+            return "Отменено";
+        default:
+            return assertNever(status);
+    }
 }

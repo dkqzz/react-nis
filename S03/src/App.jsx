@@ -1,11 +1,48 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import Header from './components/Header.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import ProductList from './components/ProductList.jsx'
 import { products } from './data.js'
 
+const initialCart = { items: [] }
+
+function cartReducer(state, action) {
+  switch (action.type) {
+    case 'add': {
+      const existingItem = state.items.find((item) => item.id === action.product.id)
+
+      if (existingItem) {
+        return {
+          ...state,
+          items: state.items.map((item) =>
+            item.id === action.product.id ? { ...item, qty: item.qty + 1 } : item,
+          ),
+        }
+      }
+
+      const { id, title, price } = action.product
+
+      return {
+        ...state,
+        items: [...state.items, { id, title, price, qty: 1 }],
+      }
+    }
+    case 'remove':
+      return {
+        ...state,
+        items: state.items.filter((item) => item.id !== action.id),
+      }
+    case 'clear':
+      return initialCart
+    default:
+      return state
+  }
+}
+
 function App() {
   const [query, setQuery] = useState('')
   const [onlyInStock, setOnlyInStock] = useState(false)
+  const [cart, dispatch] = useReducer(cartReducer, initialCart)
   const inputRef = useRef(null)
 
   useEffect(() => {
@@ -23,12 +60,13 @@ function App() {
     })
   }, [query, onlyInStock])
 
+  const qtyById = Object.fromEntries(cart.items.map((item) => [item.id, item.qty]))
+  const totalCount = cart.items.reduce((total, item) => total + item.qty, 0)
+  const totalPrice = cart.items.reduce((total, item) => total + item.price * item.qty, 0)
+
   return (
     <main className="app-shell">
-      <header className="page-header">
-        <p className="eyebrow">Каталог товаров</p>
-        <h1>Магазин</h1>
-      </header>
+      <Header totalCount={totalCount} totalPrice={totalPrice} onClear={() => dispatch({ type: 'clear' })} />
 
       <SearchBar
         inputRef={inputRef}
@@ -38,11 +76,16 @@ function App() {
         onOnlyInStockChange={setOnlyInStock}
       />
 
-      <p className="result-count" role="status">
+      <p className="result-count" aria-live="polite">
         Найдено: {visibleProducts.length}
       </p>
 
-      <ProductList products={visibleProducts} />
+      <ProductList
+        products={visibleProducts}
+        qtyById={qtyById}
+        onAdd={(product) => dispatch({ type: 'add', product })}
+        onRemove={(id) => dispatch({ type: 'remove', id })}
+      />
     </main>
   )
 }

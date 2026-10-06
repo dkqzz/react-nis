@@ -1,4 +1,4 @@
-function ProductCard({ product }) {
+function ProductCard({ product, qty, onAdd, onRemove }) {
   return (
     <li className="product-card">
       <div>
@@ -8,9 +8,20 @@ function ProductCard({ product }) {
           {product.inStock ? 'В наличии' : 'Нет в наличии'}
         </p>
       </div>
-      <button type="button" disabled={!product.inStock}>
-        В корзину
-      </button>
+      {qty > 0 ? (
+        <div className="product-actions">
+          <button type="button" onClick={() => onAdd(product)}>
+            В корзине: {qty}
+          </button>
+          <button type="button" className="secondary-button" onClick={() => onRemove(product.id)}>
+            Убрать
+          </button>
+        </div>
+      ) : (
+        <button type="button" disabled={!product.inStock} onClick={() => onAdd(product)}>
+          В корзину
+        </button>
+      )}
     </li>
   )
 }

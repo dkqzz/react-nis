@@ -1,6 +1,14 @@
+import { useMemo } from 'react'
+import useCartContext from '../context/useCartContext.js'
 import ProductCard from './ProductCard.jsx'
 
-function ProductList({ products, qtyById, onAdd, onRemove }) {
+function ProductList({ products }) {
+  const { items, add, remove } = useCartContext()
+  const qtyById = useMemo(
+    () => Object.fromEntries(items.map((item) => [item.id, item.qty])),
+    [items],
+  )
+
   if (products.length === 0) {
     return <p className="empty-state">Ничего не найдено</p>
   }
@@ -12,8 +20,8 @@ function ProductList({ products, qtyById, onAdd, onRemove }) {
           key={product.id}
           product={product}
           qty={qtyById[product.id] ?? 0}
-          onAdd={onAdd}
-          onRemove={onRemove}
+          onAdd={add}
+          onRemove={remove}
         />
       ))}
     </ul>

@@ -1,6 +1,26 @@
-import { useCallback, useMemo, useReducer } from 'react'
+import { useCallback, useEffect, useMemo, useReducer } from 'react'
 
 const initialCart = { items: [] }
+const storageKey = 's03-cart'
+
+function getInitialCart() {
+  if (typeof window === 'undefined') {
+    return initialCart
+  }
+
+  try {
+    const savedCart = window.localStorage.getItem(storageKey)
+
+    if (!savedCart) {
+      return initialCart
+    }
+
+    const parsedCart = JSON.parse(savedCart)
+    return Array.isArray(parsedCart.items) ? parsedCart : initialCart
+  } catch {
+    return initialCart
+  }
+}
 
 function cartReducer(state, action) {
   switch (action.type) {
@@ -36,7 +56,15 @@ function cartReducer(state, action) {
 }
 
 function useCart() {
-  const [cart, dispatch] = useReducer(cartReducer, initialCart)
+  const [cart, dispatch] = useReducer(cartReducer, initialCart, getInitialCart)
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify(cart))
+    } catch {
+      // localStorage can be unavailable in private or restricted browser contexts.
+    }
+  }, [cart])
 
   const add = useCallback((product) => dispatch({ type: 'add', product }), [])
   const remove = useCallback((id) => dispatch({ type: 'remove', id }), [])

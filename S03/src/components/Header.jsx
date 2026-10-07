@@ -1,4 +1,8 @@
-function Header({ totalCount, totalPrice, onClear }) {
+import useCartContext from '../context/useCartContext.js'
+
+function Header() {
+  const { totalCount: cartTotalCount, totalPrice: cartTotalPrice, clear } = useCartContext()
+
   return (
     <header className="page-header">
       <div>
@@ -7,8 +11,8 @@ function Header({ totalCount, totalPrice, onClear }) {
       </div>
 
       <div className="cart-summary" role="status">
-        <p>Корзина: {totalCount} шт. · {totalPrice} ₽</p>
-        <button type="button" onClick={onClear}>
+        <p>Корзина: {cartTotalCount} шт. · {cartTotalPrice} ₽</p>
+        <button type="button" onClick={clear}>
           Очистить
         </button>
       </div>

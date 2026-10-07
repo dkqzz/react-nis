@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Header from './components/Header.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import ProductList from './components/ProductList.jsx'
-import useCart from './hooks/useCart.js'
+import CartProvider from './context/CartProvider.jsx'
 import { products } from './data.js'
 
-function App() {
+function Catalog() {
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('')
   const [onlyInStock, setOnlyInStock] = useState(false)
   const [isPending, startTransition] = useTransition()
   const inputRef = useRef(null)
-  const { items, totalCount, totalPrice, add, remove, clear } = useCart()
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -28,11 +28,6 @@ function App() {
     })
   }, [filter, onlyInStock])
 
-  const qtyById = useMemo(
-    () => Object.fromEntries(items.map((item) => [item.id, item.qty])),
-    [items],
-  )
-
   function handleSearch(value) {
     setQuery(value)
     startTransition(() => setFilter(value))
@@ -40,11 +35,7 @@ function App() {
 
   return (
     <main className="app-shell">
-      <Header
-        totalCount={totalCount}
-        totalPrice={totalPrice}
-        onClear={clear}
-      />
+      <Header />
 
       <SearchBar
         inputRef={inputRef}
@@ -60,13 +51,18 @@ function App() {
         Найдено: {visibleProducts.length}
       </p>
 
-      <ProductList
-        products={visibleProducts}
-        qtyById={qtyById}
-        onAdd={add}
-        onRemove={remove}
-      />
+      <ErrorBoundary>
+        <ProductList products={visibleProducts} />
+      </ErrorBoundary>
     </main>
+  )
+}
+
+function App() {
+  return (
+    <CartProvider>
+      <Catalog />
+    </CartProvider>
   )
 }
 

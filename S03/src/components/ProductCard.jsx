@@ -1,4 +1,8 @@
-function ProductCard({ product, qty, onAdd, onRemove }) {
+import { memo } from 'react'
+
+const ProductCard = memo(function ProductCard({ product, qty, onAdd, onRemove }) {
+  console.log('render', product.id)
+
   return (
     <li className="product-card">
       <div>
@@ -24,6 +28,6 @@ function ProductCard({ product, qty, onAdd, onRemove }) {
       )}
     </li>
   )
-}
+})
 
 export default ProductCard

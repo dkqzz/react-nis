@@ -148,6 +148,13 @@ h1 {
   font-weight: 700;
 }
 
+.pending-indicator {
+  margin: 24px 0 -20px;
+  color: #2563eb;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .product-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));

@@ -1,56 +1,24 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import Header from './components/Header.jsx'
 import SearchBar from './components/SearchBar.jsx'
 import ProductList from './components/ProductList.jsx'
+import useCart from './hooks/useCart.js'
 import { products } from './data.js'
-
-const initialCart = { items: [] }
-
-function cartReducer(state, action) {
-  switch (action.type) {
-    case 'add': {
-      const existingItem = state.items.find((item) => item.id === action.product.id)
-
-      if (existingItem) {
-        return {
-          ...state,
-          items: state.items.map((item) =>
-            item.id === action.product.id ? { ...item, qty: item.qty + 1 } : item,
-          ),
-        }
-      }
-
-      const { id, title, price } = action.product
-
-      return {
-        ...state,
-        items: [...state.items, { id, title, price, qty: 1 }],
-      }
-    }
-    case 'remove':
-      return {
-        ...state,
-        items: state.items.filter((item) => item.id !== action.id),
-      }
-    case 'clear':
-      return initialCart
-    default:
-      return state
-  }
-}
 
 function App() {
   const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState('')
   const [onlyInStock, setOnlyInStock] = useState(false)
-  const [cart, dispatch] = useReducer(cartReducer, initialCart)
+  const [isPending, startTransition] = useTransition()
   const inputRef = useRef(null)
+  const { items, totalCount, totalPrice, add, remove, clear } = useCart()
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
   const visibleProducts = useMemo(() => {
-    const normalizedQuery = query.trim().toLowerCase()
+    const normalizedQuery = filter.trim().toLowerCase()
 
     return products.filter((product) => {
       const matchesQuery = product.title.toLowerCase().includes(normalizedQuery)
@@ -58,32 +26,35 @@ function App() {
 
       return matchesQuery && matchesStock
     })
-  }, [query, onlyInStock])
+  }, [filter, onlyInStock])
 
   const qtyById = useMemo(
-    () => Object.fromEntries(cart.items.map((item) => [item.id, item.qty])),
-    [cart.items],
+    () => Object.fromEntries(items.map((item) => [item.id, item.qty])),
+    [items],
   )
-  const totalCount = cart.items.reduce((total, item) => total + item.qty, 0)
-  const totalPrice = cart.items.reduce((total, item) => total + item.price * item.qty, 0)
-  const onAdd = useCallback((product) => dispatch({ type: 'add', product }), [])
-  const onRemove = useCallback((id) => dispatch({ type: 'remove', id }), [])
+
+  function handleSearch(value) {
+    setQuery(value)
+    startTransition(() => setFilter(value))
+  }
 
   return (
     <main className="app-shell">
       <Header
         totalCount={totalCount}
         totalPrice={totalPrice}
-        onClear={() => dispatch({ type: 'clear' })}
+        onClear={clear}
       />
 
       <SearchBar
         inputRef={inputRef}
         query={query}
         onlyInStock={onlyInStock}
-        onQueryChange={setQuery}
+        onQueryChange={handleSearch}
         onOnlyInStockChange={setOnlyInStock}
       />
+
+      {isPending && <p className="pending-indicator">Обновляем список…</p>}
 
       <p className="result-count" aria-live="polite">
         Найдено: {visibleProducts.length}
@@ -92,8 +63,8 @@ function App() {
       <ProductList
         products={visibleProducts}
         qtyById={qtyById}
-        onAdd={onAdd}
-        onRemove={onRemove}
+        onAdd={add}
+        onRemove={remove}
       />
     </main>
   )

@@ -1,4 +1,6 @@
+import axios from "axios";
 import type { User } from "../types";
+import { isRecord } from "./fetchJson";
 
 const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:3001";
 
@@ -13,8 +15,16 @@ export type LoginResponse = {
 };
 
 export async function login({ phone, password }: LoginPayload): Promise<LoginResponse> {
-  // TODO: отправить POST /auth/login (Axios) с телефоном и паролем, вернуть { token, user }
-  // Подставляйте URL из env: API_URL + "/auth/login"
-  // Не сохраняйте токен здесь — только верните данные
-  return Promise.reject(new Error("Not implemented"));
+  const response = await axios.post<LoginResponse>(
+    `${API_URL}/auth/login`,
+    { phone, password },
+    { headers: { "Content-Type": "application/json" } }
+  );
+
+  const data = response.data;
+  if (!isRecord(data) || typeof data.token !== "string" || !isRecord(data.user)) {
+    throw new Error("Сервер вернул некорректные данные авторизации");
+  }
+
+  return data as LoginResponse;
 }

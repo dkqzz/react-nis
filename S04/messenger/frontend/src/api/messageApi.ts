@@ -1,4 +1,6 @@
+import axios from "axios";
 import type { Message } from "../types";
+import { fetchJson } from "./fetchJson";
 
 const API_URL = import.meta.env?.VITE_API_URL || "http://localhost:3001";
 
@@ -10,11 +12,28 @@ function authHeaders(token: string) {
 }
 
 export async function getMessages(token: string): Promise<Message[]> {
-  // TODO: запросить GET /messages (Fetch) с заголовком Authorization Bearer <token>, вернуть список сообщений
-  return Promise.reject(new Error("Not implemented"));
+  const messages = await fetchJson<Message[]>(`${API_URL}/messages`, {
+    method: "GET",
+    headers: authHeaders(token)
+  });
+
+  if (!Array.isArray(messages)) {
+    throw new Error("Сервер вернул некорректный список сообщений");
+  }
+
+  return messages;
 }
 
 export async function sendMessage(token: string, text: string): Promise<Message> {
-  // TODO: отправить POST /messages (Axios) c { text } и заголовком Authorization, вернуть созданное сообщение
-  return Promise.reject(new Error("Not implemented"));
+  const response = await axios.post<Message>(
+    `${API_URL}/messages`,
+    { text },
+    { headers: authHeaders(token) }
+  );
+
+  if (!response.data || typeof response.data !== "object" || Array.isArray(response.data)) {
+    throw new Error("Сервер вернул некорректное сообщение");
+  }
+
+  return response.data;
 }

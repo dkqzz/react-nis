@@ -3,6 +3,10 @@ export function handleError(error: unknown): string {
   if (!error) return "Unknown error";
 
   const anyError = error as any;
+  if (typeof anyError.response?.data === "string") {
+    return anyError.response.data;
+  }
+
   if (anyError.response?.data?.message) {
     return anyError.response.data.message as string;
   }
